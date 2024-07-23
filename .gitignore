@@ -1,5 +1,6 @@
-# Save files
+# Saved data files
 *.npz
+*.bin
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
