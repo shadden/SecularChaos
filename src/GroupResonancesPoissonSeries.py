@@ -32,7 +32,7 @@ def group_resonances_poisson_series(pseries):
 
 def mass_matrix_from_secular_terms(pseries):
     N = pseries.N
-    Minv = np.array((N,N))
+    Minv = np.zeros((N,N))
     eye = np.eye(N)
     for i in range(N):
         for j in range(i,N):

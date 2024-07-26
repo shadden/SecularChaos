@@ -40,3 +40,89 @@ def count_real_roots(coefficients, a, b):
     sign_changes_b = count_sign_changes(values_at_b)
     # The number of real roots in the interval [a, b]
     return sign_changes_a - sign_changes_b
+
+import sympy as sp
+from collections import defaultdict
+def resonance_terms_to_poly(kres,Hres,omega,Amtrx,P0):
+    p = sp.symbols("p",real=True)
+    P = np.array([x + y * p for x,y in zip(P0,kres)])
+    mu_sq = sp.Poly(np.prod(P**np.mod(kres,2)))
+    non_zero_indices = np.nonzero(kres)[0]
+    dmu_dp_times_mu=sp.Poly(0.,p)
+    for i in non_zero_indices:
+        dmu_dp_times_mu+=0.5*kres[i]*np.prod([P[j] for j in non_zero_indices if j!=i])
+    Fn = defaultdict(sp.Poly(0.,p))
+    dFn_dp = defaultdict(sp.Poly(0.,p))
+    eyeN = np.eye(Hres.N,dtype=int)
+    for term in Hres.terms:
+        k1 = term.k - term.kbar
+        n = k1[non_zero_indices[0]] // kres[non_zero_indices[0]]
+        pwrs = (term.k + term.kbar - np.mod(k1,2)) // 2
+        Fn[n] += sp.Poly(term.C * np.prod(P**pwrs),p)
+        dFn_dp[n] += np.sum([term.C * kres[i] * pwrs[i] * np.prod(P**(pwrs-eyeN[i])) for i in non_zero_indices])
+
+    Minv = kres@Amtrx@kres
+    Omega = kres@(omega + Amtrx@P0)
+    keys = np.array(list(Fn.keys()))
+    keys = keys[keys>0]
+    rhs = 0
+    lhs = sp.Poly(p*Minv + Omega,p)
+    for n in keys:
+        assert n<3, "need to implement polynomials with n>2!"
+        if np.mod(n,2):
+            rhs += 2 * dmu_dp_times_mu * Fn[n] + 2 * dFn_dp[n] * mu_sq
+        else:
+            lhs += 2 * dFn_dp[n]
+    if rhs==0:
+        return lhs
+    return lhs * lhs * mu_sq - rhs * rhs
+def get_allowed_p_range(kres,P0):
+    non_zero_indices = np.nonzero(kres)[0]
+    pmin,pmax = -np.inf,np.inf
+    for nix in non_zero_indices:
+        P0i = P0[nix]
+        ki = kres[nix]
+        pcrit = - P0i/ki
+        if pcrit>0 and pcrit<pmax:
+            pmax = pcrit
+        elif pcrit<0 and pcrit > pmin:
+            pmin = pcrit
+    return (pmin,pmax)
+
+
+def Hres_to_exprn(kres,Hres,p,phi,P0):
+    cvar_symbols = Hres.cvar_symbols
+    non_zero_indices = np.nonzero(kres)[0]
+    P = np.array([a + b * p for a,b in zip(P0,kres)])
+    exprn = 0.
+    for term in Hres.terms:
+        k1 = term.k - term.kbar
+        n = k1[non_zero_indices[0]] // kres[non_zero_indices[0]]
+        pwrs = (term.k + term.kbar)/sp.S(2)
+        exprn+=term.C * np.prod(P**pwrs) * sp.cos(n*phi)
+    return exprn
+
+
+import sympy as sp
+
+
+
+def replace_small_floats(expr, threshold):
+    """
+    Replace all floats in a SymPy expression that are smaller than the given threshold with zero.
+
+    Args:
+    expr (sympy.Expr): The SymPy expression to modify.
+    threshold (float): The threshold value below which floats are replaced with zero.
+
+    Returns:
+    sympy.Expr: The modified expression.
+    """
+    # Define the replacement function that checks and replaces small floats
+    def zero_small_floats(x):
+        if isinstance(x, sp.Float) and abs(x) < threshold:
+            return sp.Float(0)
+        return x
+
+    # Replace using a lambda to apply the function to each Float in the expression
+    return expr.replace(lambda x: isinstance(x, sp.Float), zero_small_floats)

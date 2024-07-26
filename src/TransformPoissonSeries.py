@@ -91,7 +91,7 @@ def power_of_linear_combination_to_series(coeffs,pwr,conj,eccentricity):
 
 def linear_transform_secular_poisson_series_term(term,Npl,Te,Ti):
     """
-    Compute a Poisson series representation of a single Poisson serires term
+    Compute a Poisson series representation of a single Poisson series term
     after a linear transformation of complex eccentricity and inclination
     variables.
 
