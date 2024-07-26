@@ -63,6 +63,6 @@ sim_ics = rb.Simulation(sim_file)
 pvars_ic = cm.Poincare.from_Simulation(sim_ics)
 sec_sim.state.values = pvars_ic.values
 
-times = np.linspace(0,1e9,10_000)
+times = np.linspace(0,10*sec_sim.dt,3)
 soln = run_secular_system_simulation(sec_sim,times)
 np.savez_compressed("kep-11_fAMD_10.00_id{:03d}_secular_soln.bin".format(I),**soln)
