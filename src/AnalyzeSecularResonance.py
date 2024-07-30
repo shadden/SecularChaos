@@ -103,6 +103,22 @@ def Hres_to_exprn(kres,Hres,p,phi,P0):
     return exprn
 
 
+def get_resonant_keys(uv_data,resonances,omega,Minv_mtrx):
+    P = np.abs(uv_data)**2
+    res_keys = []
+    for kres,Hres in resonances.items():
+        if kres=='secular':
+            continue
+        Omega = kres @ (omega + Minv_mtrx @ P)
+        M = 1/(kres@Minv_mtrx@kres)
+        pres = -1*Omega*M
+        Pres = P + np.array(kres) * pres
+        if np.all(Pres>=0):
+            eps = np.abs(Hres(uv_data,[],[]))
+            dp_res = 2 * np.sqrt(np.abs(M*eps))
+            if dp_res > np.abs(pres):
+                res_keys.append(kres)
+    return res_keys
 import sympy as sp
 
 
