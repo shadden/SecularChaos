@@ -1,4 +1,5 @@
 # Saved data files
+*.png
 *.npz
 *.bin
 *.ipynb
@@ -166,3 +167,4 @@ data/solarsystem.tar.gz
 notebooks/Kep11_integrate.ipynb
 .DS_Store
 notebooks/kep11-whfast
+kepler-11-ics.tar.gz
