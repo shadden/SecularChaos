@@ -22,9 +22,12 @@ ge = -1*np.diag(De)
 Tsec_max = np.max(2*np.pi / ge)
 times = np.linspace(0,Tsec_max,512)
 x = np.zeros((sim.N-1,512),dtype = np.complex128)
+import sys
+print("begin")
+sys.stdout.flush()
 for i,sim in enumerate(sa.getSimulations(times,mode='close')):
     sim.integrator_synchronize()
     pvars = cm.Poincare.from_Simulation(sim)
     for j,p in enumerate(pvars.particles[1:]):
         x[j,i] = p.x
-    
+np.savez("./kep11data",times=times,x=x)
