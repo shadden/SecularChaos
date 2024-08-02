@@ -3,13 +3,12 @@ import numpy as np
 import celmech as cm
 import sys
 I = int(sys.argv[1])
-sys.path.append("../src/")
-init_file = "/Users/shadden/Projects/23_kepler_ttv_fits/median_kepler-11-config.bin"
-sim_file = "/Users/shadden/Projects/23_kepler_ttv_fits/kepler-11-ics/kep-11_fAMD_10.00_id{:03d}.bin".format(I)
+init_file = "/fs/lustre/cita/hadden/07_secular/SecularChaos/median_kepler-11-config.bin"
+sim_file = "/fs/lustre/cita/hadden/07_secular/SecularChaos/kepler-11-ics/kep-11_fAMD_3.22_id{:03d}.bin".format(I)
 from celmech.secular import SecularSystemSimulation
 import numpy as np
 from utils import farey_sequence
-def run_secular_system_simulation(sec_sim,times):
+def run_secular_system_simulation(sec_sim,times,out_file):
     r"""
     Integrate the input secular simulation and get
     output at the specified times. Results returned
@@ -28,14 +27,12 @@ def run_secular_system_simulation(sec_sim,times):
         qp_solution[i] = sec_sim.state_to_qp_vec()
         energy[i] = sec_sim.calculate_energy()
         amd[i] = sec_sim.calculate_AMD()
-
-    soln = dict()
-    soln["times"] = times_done
-    soln["energy"] = energy
-    soln["AMD"] = amd
-    soln["qp"] = qp_solution
-    return soln
-
+        np.savez_compressed(out_file,
+                            times=times_done[:i+1],
+                            energy=energy[:i+1],
+                            amd=amd[:i+1],
+                            qp=qp_solution[:i+1]
+                        )
 
 from SampleAMD import get_critical_AMD
 sim = rb.Simulation(init_file)
@@ -63,6 +60,7 @@ sim_ics = rb.Simulation(sim_file)
 pvars_ic = cm.Poincare.from_Simulation(sim_ics)
 sec_sim.state.values = pvars_ic.values
 
-times = np.linspace(0,10*sec_sim.dt,3)
-soln = run_secular_system_simulation(sec_sim,times)
-np.savez_compressed("kep-11_fAMD_10.00_id{:03d}_secular_soln.bin".format(I),**soln)
+times = np.linspace(0,1.e9,5_000)
+
+outfile = "/fs/lustre/cita/hadden/07_secular/SecularChaos/data/kep-11_fAMD_3.22_id{:03d}_secular_soln.bin".format(I)
+run_secular_system_simulation(sec_sim,times,outfile)

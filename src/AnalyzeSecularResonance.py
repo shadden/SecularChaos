@@ -103,10 +103,38 @@ def Hres_to_exprn(kres,Hres,p,phi,P0):
     return exprn
 
 
+def get_resonant_keys(uv_data,resonances,omega,Minv_mtrx):
+    P = np.abs(uv_data)**2
+    res_keys = []
+    for kres,Hres in resonances.items():
+        if kres=='secular':
+            continue
+        Omega = kres @ (omega + Minv_mtrx @ P)
+        M = 1/(kres@Minv_mtrx@kres)
+        pres = -1*Omega*M
+        Pres = P + np.array(kres) * pres
+        if np.all(Pres>=0):
+            eps = np.abs(Hres(np.sqrt(Pres),[],[]))
+            dp_res = 2 * np.sqrt(np.abs(M*eps))
+            if dp_res > np.abs(pres):
+                res_keys.append(kres)
+    return res_keys
+
+# Define the lambda function
+replace_at_index = lambda arr, idx, val: np.concatenate([arr[:idx], [val], arr[idx+1:]]) if idx < len(arr) else arr
+def kres_pseries_and_uv_to_hamiltonian_function(kres,Hres,uv,omega,A):
+    Minv = (kres@A@kres)
+    P = np.abs(uv)**2
+    Omega = kres @ (omega + A @ P)
+    theta = np.angle(uv)
+    transform_mtrx = np.eye(len(uv))
+    i_nonzero = np.nonzero(kres)[0][0]
+    transform_mtrx[i_nonzero] = kres
+    phi_to_angles = lambda phi: np.linalg.inv(transform_mtrx) @ replace_at_index(theta,i_nonzero,phi)
+    phi_p_to_uv = lambda phi,p: np.sqrt((P + kres*p)) * np.exp(1j * phi_to_angles(phi))
+    return lambda phi,p: 0.5 * Minv * p * p + Omega * p + Hres(phi_p_to_uv(phi,p),[],[])
+
 import sympy as sp
-
-
-
 def replace_small_floats(expr, threshold):
     """
     Replace all floats in a SymPy expression that are smaller than the given threshold with zero.
