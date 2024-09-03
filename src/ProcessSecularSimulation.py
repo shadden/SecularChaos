@@ -1,9 +1,9 @@
 import numpy as np
 import sys
 indx = int(sys.argv[1])
-
-fistring = "/fs/lustre/cita/hadden/07_secular/SecularChaos/data/kep-11_fAMD_3.22_id{:03d}_secular_soln.bin.npz"
-results = np.load(fistring.format(indx))
+fAMD=0.71
+fistring = "/fs/lustre/cita/hadden/07_secular/SecularChaos/data/kep-11_fAMD_{:.2f}_id{:03d}_secular_soln.bin.npz"
+results = np.load(fistring.format(fAMD,indx))
 time = results['times']
 qp_data = results['qp']
 energy = results['energy']
@@ -42,5 +42,5 @@ for kres,Hres in resonances.items():
                 counts[kres] +=  1
                 res_times[kres] +=  [t]
 
-with open("/fs/lustre/cita/hadden/07_secular/SecularChaos/data/kep-11_fAMD_3.22_id{:03d}_secular_resonance_data.bin","wb") as fi:
-    pickle.dump((counts,res_times,uv_data),fi)
+with open("/fs/lustre/cita/hadden/07_secular/SecularChaos/data/kep-11_fAMD_{:.2f}_id{:03d}_secular_resonance_data.bin".format(fAMD,indx),"wb") as fi:
+    pickle.dump((counts,res_times,uv_data,time),fi)

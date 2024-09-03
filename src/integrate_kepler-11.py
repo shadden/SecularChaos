@@ -4,7 +4,8 @@ import celmech as cm
 import sys
 I = int(sys.argv[1])
 init_file = "/fs/lustre/cita/hadden/07_secular/SecularChaos/median_kepler-11-config.bin"
-sim_file = "/fs/lustre/cita/hadden/07_secular/SecularChaos/kepler-11-ics/kep-11_fAMD_3.22_id{:03d}.bin".format(I)
+fAMD = 1.51
+sim_file = "/fs/lustre/cita/hadden/07_secular/SecularChaos/kepler-11-ics/kep-11_fAMD_{:.2f}_id{:03d}.bin".format(fAMD,I)
 from celmech.secular import SecularSystemSimulation
 import numpy as np
 from utils import farey_sequence
@@ -62,5 +63,5 @@ sec_sim.state.values = pvars_ic.values
 
 times = np.linspace(0,1.e9,5_000)
 
-outfile = "/fs/lustre/cita/hadden/07_secular/SecularChaos/data/kep-11_fAMD_3.22_id{:03d}_secular_soln.bin".format(I)
+outfile = "/fs/lustre/cita/hadden/07_secular/SecularChaos/data/kep-11_fAMD_{:.2f}_id{:03d}_secular_soln.bin".format(fAMD,I)
 run_secular_system_simulation(sec_sim,times,outfile)
