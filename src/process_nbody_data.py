@@ -33,6 +33,10 @@ def get_mean_xy_vars(sim,chi):
     chi.state.t = sim.t
     chi.osculating_to_mean()
     return np.array([p.x for p in chi.state.particles[1:]] + [p.y for p in chi.state.particles[1:]])
+def get_osculating_xy_vars(sim):
+    pvars = cm.Poincare.from_Simulation(sim)
+    return np.array([p.x for p in pvars.particles[1:]] + [p.y for p in pvars.particles[1:]])
+
 f_AMDs = [0.33,0.49,0.71,1.04,1.51,2.21,3.22,4.70,6.85,10]
 
 for f_AMD in f_AMDs:
@@ -55,7 +59,8 @@ for f_AMD in f_AMDs:
             chi.add_MMR_terms(J+1,1,indexIn=i,indexOut=j)
             chi.add_MMR_terms(J+2,1,indexIn=i,indexOut=j)
 
-    times_xy, mean_xy_data = get_sims_data(sa,lambda x: get_mean_xy_vars(x,chi))
+    #times_xy, mean_xy_data = get_sims_data(sa,lambda x: get_mean_xy_vars(x,chi))
+    times_xy, osc_xy_data = get_sims_data(sa,lambda x: get_mean_xy_vars(x,chi))
 
     pvars = cm.Poincare.from_Simulation(sim0)
     chi.state.values = pvars.values
@@ -93,8 +98,11 @@ for f_AMD in f_AMDs:
 
     ge,Te = np.linalg.eigh(Se)
     gI,TI = np.linalg.eigh(SI)
-    u = Te.T @ np.transpose(mean_xy_data[:,:6])
-    v = TI.T @ np.transpose(mean_xy_data[:,6:])
-    save_file = datadir+"fAMD_mean_element_secular_data_{:.2f}_id{:03d}".format(f_AMD,I)
+    # u = Te.T @ np.transpose(mean_xy_data[:,:6])
+    # v = TI.T @ np.transpose(mean_xy_data[:,6:])
+    u = Te.T @ np.transpose(osc_xy_data[:,:6])
+    v = TI.T @ np.transpose(osc_xy_data[:,6:])
+
+    save_file = datadir+"fAMD_osc_element_secular_data_{:.2f}_id{:03d}".format(f_AMD,I)
     print(f"Saving data to {save_file}")
-    np.savez_compressed(save_file,u=u,v=v,xy=mean_xy_data,time=times_xy,Se=Se,SI=SI,Te=Te,TI=TI)
+    np.savez_compressed(save_file,u=u,v=v,xy=osc_xy_data,time=times_xy,Se=Se,SI=SI,Te=Te,TI=TI)
